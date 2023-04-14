@@ -16,12 +16,13 @@ clock = pygame.time.Clock()
 # load image
 sky_surface = pygame.image.load('graphics/Sky.png').convert()
 ground_surface = pygame.image.load('graphics/ground.png').convert()
-text_surface = test_font.render('My game', False, 'Black') #render(text, AA, color)
-
+score_surface = test_font.render('My game', False, 'White') #render(text, AA, color)
+score_rectangle = score_surface.get_rect(midtop=(screen.get_width() / 2, 50))
 snail_surface1 = pygame.image.load('graphics/snail/snail1.png').convert_alpha()
 snail_surface2 = pygame.image.load('graphics/snail/snail1.png').convert_alpha()
 snail_rectangle = snail_surface1.get_rect(midbottom=(600,sky_surface.get_height()))
 snail_x_pos = 600
+jump = 0
 
 player_surface = pygame.image.load('graphics/player/player_walk_1.png').convert_alpha()
 # pygame.Rect(left,top,width,height)
@@ -32,16 +33,45 @@ while True:
         if event.type == pygame.QUIT: # If the user closes the window
             pygame.quit() # Close Pygame and exit the program
             exit()  # Exit the program
+
+        if event.type == pygame.MOUSEBUTTONUP:
+            print('mouse up')
+
+        if event.type == pygame.MOUSEMOTION:
+            if player_rectangle.collidepoint(event.pos): print('collision')
+
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_SPACE:
+                print('jump')
+
+        if event.type == pygame.KEYUP:
+            print('keyup')
+        
+       
+    keys = pygame.key.get_pressed()
+    #if keys[pygame.K_SPACE]:
+       # print(keys[pygame.K_SPACE])
+
+
     # draw image
     screen.blit(sky_surface,(0,0))
     screen.blit(ground_surface,(0,sky_surface.get_height()))
-    screen.blit(text_surface,(350,50))
+
+    # pygame.draw.rect(screen, 'Purple', score_rectangle)
+    pygame.draw.rect(screen, '#c0e8ec', score_rectangle.inflate(20, 10), 100)  # outer rectangle
+    # pygame.draw.line(screen, 'Gold',(0,0),(pygame.mouse.get_pos()), 10)
+    # pygame.draw.ellipse(screen, 'brown', pygame.Rect(750, 100, 100, 200))
+    screen.blit(score_surface,score_rectangle)
+    
     snail_rectangle.x -= 4
     if snail_rectangle.right == 0 : snail_rectangle.left = 800 
     screen.blit(snail_surface1, snail_rectangle)
+
     screen.blit(player_surface, player_rectangle)
 
-    print(player_rectangle.colliderect(snail_rectangle))
+    
+
+    #print(player_rectangle.colliderect(snail_rectangle))
 
 
     # Update the game's graphics and display them on the screen
