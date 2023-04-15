@@ -19,29 +19,7 @@ buttons = joystick.get_numbuttons()
 print(f"Controller connesso: {name}")
 print(f"Assi: {axes}")
 print(f"Bottoni: {buttons}")
-def controller_btn_case(i):
-    if i == 0:
-        print("Hai premuto il pulsante A")
-    elif i == 1:
-        print("Hai premuto il pulsante B")
-    elif i == 2:
-        print("Hai premuto il pulsante X del controller")
-    elif i == 3:
-        print("Hai premuto il pulsante Y del controller")
-    elif i == 4:
-        print("Hai premuto il pulsante LB del controller")
-    elif i == 5:
-        print("Hai premuto il pulsante RB del controller")
-    elif i == 6:
-        print("Hai premuto il pulsante SELECT del controller")
-    elif i == 7:
-        print("Hai premuto il pulsante START del controller")
-    elif i == 8:
-        print("Hai premuto il pulsante ANALOGICO SX del controller")
-    elif i == 9:
-        print("Hai premuto il pulsante ANALOGICO DX del controller")
-    elif i == 10: # don't work because I've Xbox, and open it
-        print("Hai premuto il pulsante Home del controller")
+
 # Create a Pygame clock object that will be used to regulate the game's frame rate
 clock = pygame.time.Clock()
 
@@ -67,6 +45,37 @@ player_gravity = 0
 player_surface = pygame.image.load('graphics/player/player_walk_1.png').convert_alpha()
 # pygame.Rect(left,top,width,height)
 player_rectangle = player_surface.get_rect(midbottom=(80,sky_surface.get_height()))
+
+# controller joystick
+def controller_btn_case(i): # DON'T find LT and RT
+    global player_gravity
+    global game_active
+    if i == 0:
+        player_gravity = -10
+        print("Hai premuto il pulsante A") 
+    elif i == 1:
+        print("Hai premuto il pulsante B")
+    elif i == 2:
+        print("Hai premuto il pulsante X del controller")
+    elif i == 3:
+        print("Hai premuto il pulsante Y del controller")
+    elif i == 4:
+        print("Hai premuto il pulsante LB del controller")
+    elif i == 5:
+        print("Hai premuto il pulsante RB del controller")
+    elif i == 6:
+        print("Hai premuto il pulsante SELECT del controller")
+    elif i == 7:
+        if game_active: game_active = False
+        else: game_active = True
+        print("Hai premuto il pulsante START del controller")
+    elif i == 8:
+        print("Hai premuto il pulsante ANALOGICO SX del controller")
+    elif i == 9:
+        print("Hai premuto il pulsante ANALOGICO DX del controller")
+    elif i == 10: # don't work because I've Xbox, and open it
+        print("Hai premuto il pulsante Home del controller")
+
 # Start an infinite loop that will keep the game running until the user closes the window
 while True:
     for event in pygame.event.get(): # Check for any events in the event queue
@@ -79,27 +88,16 @@ while True:
         if event.type == pygame.KEYUP:
             print('keyup')
 
+        if event.type == pygame.JOYBUTTONDOWN:               
+            for i in range(joystick.get_numbuttons()):
+                if joystick.get_button(i):
+                    print(f"Pulsante {i} premuto")          
+                    controller_btn_case(i)
+
         if game_active:    
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if player_rectangle.collidepoint(event.pos): 
-                    player_gravity = -10
-            #   if event.button == pygame.CONTROLLER_BUTTON_START: # in my controller work with select
-            #   if event.button == pygame.CONTROLLER_BUTTON_GUIDE:  RB
-            #   if event.button == pygame.CONTROLLER_BUTTON_BACK:  LB
-            #   if event.button == pygame.CONTROLLER_BUTTON_MAX: ??
-            #   if event.button == pygame.CONTROLLER_BUTTON_DPAD_UP: ??
-            if event.type == pygame.JOYBUTTONDOWN:               
-                for i in range(joystick.get_numbuttons()):
-                    if joystick.get_button(i):
-                        print(f"Pulsante {i} premuto")          
-                        controller_btn_case(i)          
-              
-                if event.button == pygame.CONTROLLER_BUTTON_A:
-                    player_gravity = -10
-                    print("Hai premuto il pulsante A del controller")  
-                # if event.button == joystick.get_button(7): DON'T WORK
-                #     game_active = False
-                #     print("start")
+                    player_gravity = -10 
 
             if event.type == pygame.MOUSEMOTION:
                 if player_rectangle.collidepoint(event.pos): 
