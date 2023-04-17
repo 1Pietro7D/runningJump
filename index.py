@@ -27,6 +27,14 @@ def load():# for now use global variable
     player_rotozoom = pygame.transform.rotozoom(player_stand_surface,0,2) #rotozoom(Obj, deg, x zoom)
     player_rotozoom_rect= player_rotozoom.get_rect(center=(400,200))
 
+active_jump = 2
+def jump():
+    global active_jump, player_gravity
+    if active_jump > 0:
+       player_gravity = -10
+       active_jump -= 1
+    
+
 pygame.init() # Initialize the Pygame modules
 reset_time = 0
 # Create a game window with width 900 and height 500 and store it in a variable called "screen"
@@ -56,7 +64,6 @@ game_over = False
 
 def check_game_status():
     global game_start, game_play, game_pause, game_over
-    status = []
     print("game_start : ", game_start)
     print("game_play : ", game_play)
     print("game_pause : ", game_pause)
@@ -78,14 +85,17 @@ move_direction = 0
 move_interval = 10 # in milliseconds
 move_timer = pygame.time.get_ticks() + move_interval
 
-obstacle_timer = 0
+#timer
+obstacle_timer = pygame.USEREVENT + 1
+pygame.time.set_timer(obstacle_timer,900)
 
 # controller joystick
 def controller_btn_case(i):
     global player_gravity, game_pause, game_play, game_start,game_over, reset_time
     if i == 0:
         print("Hai premuto il pulsante A") 
-        if game_play: player_gravity = -10 
+        if game_play:
+            jump()           
     elif i == 1:
         print("Hai premuto il pulsante B")
     elif i == 2:
@@ -246,9 +256,12 @@ while True:
             player_walk_rectangle_1.x += move_direction * player_speed * move_interval / 1000
             move_timer = pygame.time.get_ticks() + move_interval
 
+        #Gravity
         player_gravity += 0.5
         player_walk_rectangle_1.y += player_gravity
-        if player_walk_rectangle_1.bottom >= 300: player_walk_rectangle_1.bottom = 300   
+        if player_walk_rectangle_1.bottom >= 300: 
+            player_walk_rectangle_1.bottom = 300 
+            active_jump = 2  
         screen.blit(player_walk_surface_1, player_walk_rectangle_1)
 
         #collision
