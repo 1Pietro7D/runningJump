@@ -2,10 +2,11 @@ import pygame # Import the Pygame module
 from sys import exit # Import the "exit" function from the "sys" module
 
 def display_score():
-    global score_surface, score_rectangle
+    global score_surface, score_rectangle, score
     total_time = pygame.time.get_ticks()
     current_time = total_time - reset_time
-    score_surface = test_font.render(f'Score {current_time}', False, 'White') #render(text, AA, color) 
+    score = int(current_time/100) # + more points enemy
+    score_surface = test_font.render(f'Score {score}', False, 'White') #render(text, AA, color) 
     score_rectangle = score_surface.get_rect(midtop=(screen.get_width() / 2, 50))
 
 def load():# for now use global variable
@@ -55,10 +56,12 @@ game_over = False
 
 def check_game_status():
     global game_start, game_play, game_pause, game_over
+    status = []
     print("game_start : ", game_start)
     print("game_play : ", game_play)
     print("game_pause : ", game_pause)
-    print("game_over : ", game_over)   
+    print("game_over : ", game_over) 
+    return   
            
 # load static image
 sky_surface = pygame.image.load('graphics/Sky.png').convert()
@@ -74,6 +77,8 @@ move_direction = 0
 # Set a fixed time interval to refresh character position
 move_interval = 10 # in milliseconds
 move_timer = pygame.time.get_ticks() + move_interval
+
+obstacle_timer = 0
 
 # controller joystick
 def controller_btn_case(i):
@@ -110,6 +115,7 @@ def controller_btn_case(i):
             game_play = False
     elif i == 8:
         print("Hai premuto il pulsante ANALOGICO SX del controller")
+        
     elif i == 9:
         print("Hai premuto il pulsante ANALOGICO DX del controller")
     elif i == 10: # don't work because I've Xbox, and open it
@@ -209,6 +215,15 @@ while True:
         load()
         screen.fill((94,129,162))
         screen.blit(player_rotozoom,player_rotozoom_rect)
+        # if 'score' in globals():
+        if 'score' in locals():
+            score_message = test_font.render(f'Your score: {score}', False, (111,196,169))
+            score_message_rect = score_message.get_rect(center=(400,330))
+            screen.blit(score_message, score_message_rect)
+        else:
+            game_message = test_font.render('Press start to play', False, (111,196,169))
+            game_message_rect = game_message.get_rect(center=(400,330))
+            screen.blit(game_message, game_message_rect)
        
     if game_play:
         # draw image background
