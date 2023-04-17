@@ -1,19 +1,41 @@
 import pygame # Import the Pygame module
 from sys import exit # Import the "exit" function from the "sys" module
+from random import randint
 
+reset_time = 0
 def display_score():
-    global score_surface, score_rectangle, score
+    global score_surface, score_rectangle, score, pause_time_list
     total_time = pygame.time.get_ticks()
     current_time = total_time - reset_time
-    score = int(current_time/100) # + more points enemy
+    score = int((current_time - (sum(pause_time_list))) /100) # + more points enemy
     score_surface = test_font.render(f'Score {score}', False, 'White') #render(text, AA, color) 
     score_rectangle = score_surface.get_rect(midtop=(screen.get_width() / 2, 50))
 
+def obstacle_movement(obstacle_list):
+    if obstacle_list:
+        for obstacle_rect in obstacle_list:
+            obstacle_rect.x -= 5
+            screen.blit(snail_surface1, obstacle_rect)
+        obstacle_list = [obstacle for obstacle in obstacle_list if obstacle.right > -100 ]
+        return obstacle_list
+    else: return []
+
 def load():# for now use global variable
-    global score_rectangle,snail_surface1, snail_rectangle, player_walk_surface_1, player_walk_rectangle_1,player_walk_surface_2, player_walk_rectangle_2, player_gravity,player_stand_surface, player_stand_rectangle, player_rotozoom, player_rotozoom_rect
+    global score_rectangle,snail_surface1, snail_rectangle, player_walk_surface_1, player_walk_rectangle_1,player_walk_surface_2, player_walk_rectangle_2, player_gravity,player_stand_surface, player_stand_rectangle, player_rotozoom, player_rotozoom_rect, obstacle_rect_list, pause_time,resume_time, pause_time_list
+
+    # obstacle
+    # Snail
     snail_surface1 = pygame.image.load('graphics/snail/snail1.png').convert_alpha() 
     # snail_surface2 = pygame.image.load('graphics/snail/snail1.png').convert_alpha()
     snail_rectangle = snail_surface1.get_rect(midbottom=(600,sky_surface.get_height()))
+
+    obstacle_rect_list = []
+
+    pause_time = 0
+    resume_time = 0
+    pause_time_list = []
+
+
     player_walk_surface_1 = pygame.image.load('graphics/player/player_walk_1.png').convert_alpha()
     player_walk_rectangle_1 = player_walk_surface_1.get_rect(midbottom=(80,sky_surface.get_height()))# pygame.Rect(left,top,width,height)
     player_walk_surface_2 = pygame.image.load('graphics/player/player_walk_2.png').convert_alpha()
@@ -36,7 +58,8 @@ def jump():
     
 
 pygame.init() # Initialize the Pygame modules
-reset_time = 0
+
+
 # Create a game window with width 900 and height 500 and store it in a variable called "screen"
 screen = pygame.display.set_mode((800, 400))
 pygame.display.set_caption('RunnerJump') # set title 
@@ -63,11 +86,12 @@ game_pause = False
 game_over = False
 
 def check_game_status():
-    global game_start, game_play, game_pause, game_over
+    global game_start, game_play, game_pause, game_over, pause_time_list
     print("game_start : ", game_start)
     print("game_play : ", game_play)
     print("game_pause : ", game_pause)
-    print("game_over : ", game_over) 
+    print("game_over : ", game_over)
+    print(pause_time_list)
     return   
            
 # load static image
@@ -91,7 +115,7 @@ pygame.time.set_timer(obstacle_timer,900)
 
 # controller joystick
 def controller_btn_case(i):
-    global player_gravity, game_pause, game_play, game_start,game_over, reset_time
+    global player_gravity, game_pause, game_play, game_start,game_over, reset_time, pause_time, resume_time
     if i == 0:
         print("Hai premuto il pulsante A") 
         if game_play:
@@ -120,9 +144,14 @@ def controller_btn_case(i):
         elif game_pause: 
             game_pause = False
             game_play = True
+            resume_time = pygame.time.get_ticks()
+            if pause_time>0:
+                pause_time_list.append(resume_time - pause_time)
         elif game_play: 
             game_pause = True
             game_play = False
+            pause_time = pygame.time.get_ticks()
+            
     elif i == 8:
         print("Hai premuto il pulsante ANALOGICO SX del controller")
         
@@ -135,17 +164,14 @@ def controller_btn_case(i):
 
 # Start an infinite loop that will keep the game running until the user closes the window
 while True:
-    
+
+    #### ALL EVENTS ####
     for event in pygame.event.get(): # Check for any events in the event queue
         if event.type == pygame.QUIT: # If the user closes the window
             pygame.quit() # Close Pygame and exit the program
             exit()  # Exit the program
 
-        # if event.type == pygame.MOUSEBUTTONUP:
-        #     print('mouse up')
-        # if event.type == pygame.KEYUP:
-        #     print('keyup')
-
+        ### CONTROLLER BUTTON LINK ### because start and other bug don't work
         if event.type == pygame.JOYBUTTONDOWN:               
             for i in range(joystick.get_numbuttons()):
                 if joystick.get_button(i):
@@ -159,14 +185,12 @@ while True:
             if event.axis == 4:  # LT
                 lt_value = joystick.get_axis(4)
                 print("LT value:", lt_value)
-
             if event.axis == 3:  # analogic DX axis Y -3.0517578125e-05 if 0
                 right_stick_y_value = joystick.get_axis(3) 
                 print("right_stick_y_value:", right_stick_y_value) # -1=🠕 ~ 1=🠗 
             if event.axis == 2:  # analogic DX axis X 0 if 0
                 right_stick_x_value = joystick.get_axis(2)
                 print("right_stick_x_value:", right_stick_x_value) # -1=🠔 ~ 1=🠖
-
             if event.axis == 1:  # analogic DX axis Y -3.0517578125e-05 if 0
                 left_stick_y_value = joystick.get_axis(1) 
                 print("left_stick_y_value:", left_stick_y_value) # -1=🠕 ~ 1=🠗 
@@ -179,48 +203,51 @@ while True:
                     move_direction = -1
                 else:
                     move_direction = 0
-                
-        
-        
-        if game_play:    
-            if event.type == pygame.MOUSEBUTTONDOWN:
-                if player_walk_rectangle_1.collidepoint(event.pos): 
-                    player_gravity = -10 
+        ### GAME_PLAY EVENTS ###
+        if game_play: 
+            if event.type == obstacle_timer:
+                obstacle_rect_list.append(snail_surface1.get_rect(bottomright= (randint(900,1100), 300)))
 
-            if event.type == pygame.MOUSEMOTION:
-                if player_walk_rectangle_1.collidepoint(event.pos): 
-                    print('collision')
-
-            if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_SPACE:
-                    game_pause = False
-
-        elif game_pause:
-            if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_SPACE:
-                    game_pause = False
-                if event.key == pygame.K_RETURN:
-                    print("invio")
-
-        elif game_over or game_start: 
-            if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_RETURN:
-                    print("invio")
-                    reset_time = pygame.time.get_ticks()
-                    if game_start:
-                        print("miao")
-                        game_start = False
-                    else: 
-                        game_start = True
-                        game_over = False
-                    
-                    
-                   
-                    
+        #    if event.type == pygame.MOUSEBUTTONDOWN:
+        #        if player_walk_rectangle_1.collidepoint(event.pos): 
+        #            player_gravity = -10 
+        #     
+        #    if event.type == pygame.MOUSEMOTION:
+        #        if player_walk_rectangle_1.collidepoint(event.pos): 
+        #            print('collision') 
+        #    
+        #    if event.type == pygame.KEYDOWN:
+        #        if event.key == pygame.K_SPACE:
+        #            game_play = False
+        #            game_pause = True    
             
-       
-        
-       
+        # ### GAME_PAUSE EVENTS ###
+        # elif game_pause:
+        #     if event.type == pygame.KEYDOWN:
+        #         if event.key == pygame.K_SPACE:
+        #             game_play = True
+        #             game_pause = False
+        #         if event.key == pygame.K_RETURN:
+        #             print("invio")
+        # ### GAME_START EVENTS ###
+        # elif game_start: 
+        #     if event.type == pygame.KEYDOWN:
+        #         if event.key == pygame.K_RETURN:
+        #             print("invio")
+        #             reset_time = pygame.time.get_ticks()
+        #             if game_start:
+        #                 game_start = False
+        #                 game_play = True
+        # ### GAME_OVER EVENTS ###          
+        # elif game_over: 
+        #     if event.type == pygame.KEYDOWN:
+        #         if event.key == pygame.K_RETURN:
+        #             print("invio")
+        #             reset_time = pygame.time.get_ticks()
+        #             game_start = True
+        #             game_over = False                
+
+    #### GAME_START ####                 
     if game_start:
         load()
         screen.fill((94,129,162))
@@ -234,29 +261,37 @@ while True:
             game_message = test_font.render('Press start to play', False, (111,196,169))
             game_message_rect = game_message.get_rect(center=(400,330))
             screen.blit(game_message, game_message_rect)
-       
+
+    #### GAME_PLAY ####  
     if game_play:
-        # draw image background
+        ### draw image background ###
         screen.blit(sky_surface,(0,0))
         screen.blit(ground_surface,(0,sky_surface.get_height()))
-
-        # score
+        check_game_status()
+        ### score ###
         display_score()
         pygame.draw.rect(screen, '#c0e8ec', score_rectangle.inflate(20, 10), 100)  # outer rectangle
         screen.blit(score_surface,score_rectangle)
 
-        # snail
-        snail_rectangle.x -= 8
-        if snail_rectangle.right <= 0 : snail_rectangle.left = 800 
-        screen.blit(snail_surface1, snail_rectangle)
 
-        # player
-        # Refresh character position based on fixed time interval
-        if pygame.time.get_ticks() >= move_timer:
+        ### Obstacle ###
+
+        # # snail
+        # snail_rectangle.x -= 8
+        # if snail_rectangle.right < 0 : snail_rectangle.left = 800 
+        # screen.blit(snail_surface1, snail_rectangle)
+        obstacle_rect_list = obstacle_movement(obstacle_rect_list)
+        
+
+
+        ### Player ###
+        
+        ## Moviment X : left_stick_x ##
+        if pygame.time.get_ticks() >= move_timer: # Refresh character position based on fixed time interval
             player_walk_rectangle_1.x += move_direction * player_speed * move_interval / 1000
             move_timer = pygame.time.get_ticks() + move_interval
 
-        #Gravity
+        ## Moviment Y : Gravity and Jump ##
         player_gravity += 0.5
         player_walk_rectangle_1.y += player_gravity
         if player_walk_rectangle_1.bottom >= 300: 
@@ -264,12 +299,13 @@ while True:
             active_jump = 2  
         screen.blit(player_walk_surface_1, player_walk_rectangle_1)
 
-        #collision
-        if player_walk_rectangle_1.colliderect(snail_rectangle): 
-            game_over = True
-            game_play = False
+        ## Collision event ##
+        for obstacle in obstacle_rect_list:    
+            if player_walk_rectangle_1.colliderect(obstacle): 
+                game_over = True
+                game_play = False
             
-     
+    #### GAME_OVER #### 
     elif game_over:
         game_over_surface = test_font.render('Game Over', False, 'Black') #render(text, AA, color)
         game_over_rectangle = game_over_surface.get_rect(midtop=(screen.get_width() / 2, 50))
@@ -280,12 +316,12 @@ while True:
         restart_rectangle = restart_surface.get_rect(midtop=(screen.get_width() / 2, 250))
         pygame.draw.rect(screen, 'Red', restart_rectangle.inflate(50, 40), 100)  # outer rectangle
         screen.blit(restart_surface,restart_rectangle)
-           
+    #### GAME_PAUSE ####       
     elif game_pause:
-        score_surface = test_font.render('Pause', False, 'Black') #render(text, AA, color)
-        score_rectangle = score_surface.get_rect(midtop=(screen.get_width() / 2, 50))
-        pygame.draw.rect(screen, 'Green', score_rectangle.inflate(50, 30), 100)  # outer rectangle
-        screen.blit(score_surface,score_rectangle)
+        pause_message = test_font.render('Pause', False, 'Black') #render(text, AA, color)
+        pause_rectangle = pause_message.get_rect(midtop=(screen.get_width() / 2, 200))
+        pygame.draw.rect(screen, 'Gold', pause_rectangle.inflate(50, 30), 100)  # outer rectangle
+        screen.blit(pause_message,pause_rectangle)
 
 
     # Update the game's graphics and display them on the screen
