@@ -18,13 +18,21 @@ def obstacle_movement(obstacle_list):
         for obstacle_rect in obstacle_list:
             obstacle_rect.x -= 5
             ## DRAW SNAIL and FLY
-            if obstacle_rect.bottom == ground: 
-                screen.blit(snail[0], obstacle_rect)
+            if obstacle_rect.bottom == ground:  
+                screen.blit(animation(snail), obstacle_rect)
             if obstacle_rect.bottom == 150:
-                screen.blit(fly[0], obstacle_rect)
+                screen.blit(animation(fly), obstacle_rect)
         obstacle_list = [obstacle for obstacle in obstacle_list if obstacle.right > -100 ]
         return obstacle_list
     else: return []
+
+def animation(obstacle_surf):
+    global obstacle_index
+    obstacle_index += 0.05
+    if obstacle_index >= len(obstacle_surf): 
+        obstacle_index = 0
+    
+    return obstacle_surf[int(obstacle_index)]
 
 
 ### PLAYER ANIMATION ###
@@ -48,7 +56,7 @@ def load():# for now use global variable
     ### Obstacle ###
     ## Snail ##
     snail_1 = pygame.image.load('graphics/snail/snail1.png').convert_alpha() 
-    snail_2 = pygame.image.load('graphics/snail/snail1.png').convert_alpha()
+    snail_2 = pygame.image.load('graphics/snail/snail2.png').convert_alpha()
     snail = [snail_1,snail_2]
 
     ## Fly ##
